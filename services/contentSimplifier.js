@@ -105,6 +105,45 @@ async function simplifyArticle(url) {
   }
 }
 
+/**
+ * 获取文章评论（前10条）
+ */
+async function getComments(url) {
+  try {
+    console.log(`正在获取评论: ${url}`);
+    
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      timeout: 10000
+    });
+
+    const $ = cheerio.load(response.data);
+    
+    // IT之家评论通常在特定的div中
+    const comments = [];
+    $('.comment-item, .post-comment, .comment, li.item').slice(0, 10).each((i, elem) => {
+      const $elem = $(elem);
+      const author = $elem.find('.author, .user, .name, .username').first().text().trim();
+      const content = $elem.find('.content, .comment-content, .text, .comment-text, p').first().text().trim();
+      
+      if (content && content.length > 0) {
+        comments.push({
+          author: author || '匿名用户',
+          content: content
+        });
+      }
+    });
+
+    return comments.slice(0, 10);
+  } catch (error) {
+    console.error('获取评论失败:', error.message);
+    return [];
+  }
+}
+
 module.exports = {
-  simplifyArticle
+  simplifyArticle,
+  getComments
 };

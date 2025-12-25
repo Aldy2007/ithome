@@ -17,7 +17,30 @@ app.use(express.static('public'));
 app.get('/', async (req, res) => {
   try {
     const articles = await rssService.getArticles();
-    res.render('index', { articles });
+    // 分类文章 - 游戏相关的置顶
+    const gameArticles = articles.filter(a => 
+      a.title.includes('游戏') || 
+      a.title.includes('Steam') || 
+      a.title.includes('PS5') || 
+      a.title.includes('Xbox') ||
+      a.title.includes('任天堂') ||
+      a.title.includes('Switch') ||
+      (a.categories && a.categories.some(cat => 
+        cat.includes('游戏') || cat.includes('Game')
+      ))
+    );
+    const otherArticles = articles.filter(a => !gameArticles.includes(a));
+    const sortedArticles = [...gameArticles, ...otherArticles];
+    
+    // 获取每篇文章的评论
+    const articlesWithComments = await Promise.all(
+      sortedArticles.map(async article => {
+        const comments = await contentSimplifier.getComments(article.link);
+        return { ...article, comments };
+      })
+    );
+    
+    res.render('index', { articles: articlesWithComments });
   } catch (error) {
     console.error('获取文章列表失败:', error);
     res.status(500).render('error', { message: '无法获取文章列表' });
