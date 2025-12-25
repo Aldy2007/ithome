@@ -11,19 +11,33 @@
     .article { margin: 8px 0; padding: 5px; border-bottom: 1px solid #ddd; }
     .title { font-weight: bold; margin-bottom: 3px; }
     .title a { text-decoration: none; color: #000; }
+    .categories { font-size: 12px; margin-top: 3px; }
+    .category { display: inline-block; margin-right: 5px; padding: 2px 5px; background: #eee; border-radius: 3px; }
+    .category a { text-decoration: none; color: #555; }
     .comments { font-size: 12px; color: #666; margin-top: 5px; }
     .comment { margin: 3px 0 3px 10px; }
     .author { font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>IT之家</h1>
+  <h1>IT之家<% if (categoryName) { %> - <%= categoryName %><% } %></h1>
+  <% if (categoryName) { %>
+    <p style="font-size: 12px; margin-bottom: 10px;"><a href="/" style="color: #666;">← 返回首页</a></p>
+  <% } %>
   
   <% articles.forEach(article => { %>
     <div class="article <%= article.title.includes('游戏') || article.title.includes('Steam') || article.title.includes('PS5') || article.title.includes('Xbox') || article.title.includes('任天堂') || article.title.includes('Switch') ? 'game' : '' %>">
       <div class="title">
-        <a href="<%= article.link %>"><%= article.title %></a>
+        <a href="/article/<%= article.id %>"><%= article.title %></a>
       </div>
+      
+      <% if (article.categories && article.categories.length > 0) { %>
+        <div class="categories">
+          <% article.categories.forEach(cat => { %>
+            <span class="category"><a href="/category/<%= encodeURIComponent(cat) %>"><%= cat %></a></span>
+          <% }) %>
+        </div>
+      <% } %>
       
       <% if (article.comments && article.comments.length > 0) { %>
         <div class="comments">

@@ -40,10 +40,36 @@ app.get('/', async (req, res) => {
       })
     );
     
-    res.render('index', { articles: articlesWithComments });
+    res.render('index', { articles: articlesWithComments, categoryName: null });
   } catch (error) {
     console.error('获取文章列表失败:', error);
     res.status(500).render('error', { message: '无法获取文章列表' });
+  }
+});
+
+// 分类页面 - 显示特定分类的文章
+app.get('/category/:name', async (req, res) => {
+  try {
+    const categoryName = decodeURIComponent(req.params.name);
+    const allArticles = await rssService.getArticles();
+    
+    // 筛选出该分类的文章
+    const categoryArticles = allArticles.filter(a => 
+      a.categories && a.categories.includes(categoryName)
+    );
+    
+    // 获取每篇文章的评论
+    const articlesWithComments = await Promise.all(
+      categoryArticles.map(async article => {
+        const comments = await contentSimplifier.getComments(article.link);
+        return { ...article, comments };
+      })
+    );
+    
+    res.render('index', { articles: articlesWithComments, categoryName });
+  } catch (error) {
+    console.error('获取分类文章失败:', error);
+    res.status(500).render('error', { message: '无法获取分类文章' });
   }
 });
 
